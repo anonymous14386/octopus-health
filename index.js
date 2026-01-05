@@ -264,6 +264,107 @@ app.get('/api/weight-data', requireLogin, async (req, res) => {
     res.json(entries);
 });
 
+// User settings routes
+app.get('/settings', requireLogin, (req, res) => {
+    res.render('settings', { title: 'Account Settings', user: req.session.user, error: null, success: null });
+});
+
+app.post('/settings/change-password', requireLogin, async (req, res) => {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    
+    try {
+        const user = await User.findOne({ where: { username: req.session.user.username } });
+        
+        const validPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!validPassword) {
+            return res.render('settings', { 
+                title: 'Account Settings', 
+                user: req.session.user, 
+                error: 'Current password is incorrect', 
+                success: null 
+            });
+        }
+        
+        if (newPassword !== confirmPassword) {
+            return res.render('settings', { 
+                title: 'Account Settings', 
+                user: req.session.user, 
+                error: 'New passwords do not match', 
+                success: null 
+            });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.render('settings', { 
+                title: 'Account Settings', 
+                user: req.session.user, 
+                error: 'Password must be at least 6 characters', 
+                success: null 
+            });
+        }
+        
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedPassword;
+        await user.save();
+        
+        res.render('settings', { 
+            title: 'Account Settings', 
+            user: req.session.user, 
+            error: null, 
+            success: 'Password changed successfully' 
+        });
+    } catch (error) {
+        console.error('Password change error:', error);
+        res.render('settings', { 
+            title: 'Account Settings', 
+            user: req.session.user, 
+            error: 'Failed to change password', 
+            success: null 
+        });
+    }
+});
+
+app.post('/settings/delete-account', requireLogin, async (req, res) => {
+    const { password } = req.body;
+    const username = req.session.user.username;
+    
+    try {
+        const user = await User.findOne({ where: { username } });
+        
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.render('settings', { 
+                title: 'Account Settings', 
+                user: req.session.user, 
+                error: 'Incorrect password', 
+                success: null 
+            });
+        }
+        
+        // Delete user database
+        const dbPath = path.join(dataDir, `${username}_health.sqlite`);
+        if (fs.existsSync(dbPath)) {
+            fs.unlinkSync(dbPath);
+        }
+        
+        // Delete user from auth database
+        await user.destroy();
+        
+        // Destroy session and redirect to login
+        req.session.destroy(() => {
+            res.redirect('/login');
+        });
+    } catch (error) {
+        console.error('Account deletion error:', error);
+        res.render('settings', { 
+            title: 'Account Settings', 
+            user: req.session.user, 
+            error: 'Failed to delete account', 
+            success: null 
+        });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Health Tracker running on port ${port}`);
 });
