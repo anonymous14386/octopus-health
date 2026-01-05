@@ -1,0 +1,22 @@
+{
+  "name": "octopus-health-tracker",
+  "version": "1.0.0",
+  "description": "Health tracking app for weight, exercise, and food",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": ["health", "fitness", "tracker"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.18.0",
+    "ejs": "^3.1.9",
+    "sequelize": "^6.37.1",
+    "sqlite3": "^5.1.7",
+    "body-parser": "^1.20.2",
+    "chart.js": "^4.4.1"
+  }
+}

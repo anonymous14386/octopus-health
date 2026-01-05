@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: #f5f7fa; }
+        nav { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; }
+        nav .container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        nav h1 { font-size: 24px; }
+        nav .nav-links { display: flex; gap: 20px; flex-wrap: wrap; }
+        nav a { color: white; text-decoration: none; padding: 8px 16px; border-radius: 5px; }
+        nav a:hover { background: rgba(255,255,255,0.2); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #333; margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; color: #555; font-weight: 500; }
+        input, select, textarea { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; }
+        button { padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        button:hover { transform: translateY(-2px); }
+        .goal-item { background: #f8f9fa; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #667eea; }
+        .goal-item.completed { opacity: 0.6; border-left-color: #28a745; }
+        .goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .goal-actions { display: flex; gap: 10px; }
+        .toggle-btn { background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .toggle-btn:hover { background: #218838; }
+        .delete-btn { background: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .delete-btn:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1>🏥 Health Tracker</h1>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/weight">Weight</a>
+                <a href="/exercise">Exercise</a>
+                <a href="/meals">Meals</a>
+                <a href="/goals">Goals</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>🎯 Create Goal</h2>
+            <form method="POST" action="/goals">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Goal Type</label>
+                        <select name="type" required>
+                            <option value="weight">Weight Goal</option>
+                            <option value="exercise">Exercise Goal</option>
+                            <option value="calories">Calorie Goal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Value</label>
+                        <input type="number" step="0.1" name="targetValue" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Value (optional)</label>
+                        <input type="number" step="0.1" name="currentValue">
+                    </div>
+                    <div class="form-group">
+                        <label>Deadline (optional)</label>
+                        <input type="date" name="deadline">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="2" placeholder="Describe your goal..."></textarea>
+                </div>
+                <button type="submit">Create Goal</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Your Goals</h2>
+            <% if (goals.length > 0) { %>
+                <% goals.forEach(goal => { %>
+                    <div class="goal-item <%= goal.completed ? 'completed' : '' %>">
+                        <div class="goal-header">
+                            <div>
+                                <strong><%= goal.type.charAt(0).toUpperCase() + goal.type.slice(1) %> Goal</strong>
+                                <% if (goal.completed) { %>
+                                    <span style="color: #28a745; margin-left: 10px;">✓ Completed</span>
+                                <% } %>
+                            </div>
+                            <div class="goal-actions">
+                                <form method="POST" action="/goals/toggle/<%= goal.id %>" style="display: inline;">
+                                    <button type="submit" class="toggle-btn">
+                                        <%= goal.completed ? 'Reopen' : 'Complete' %>
+                                    </button>
+                                </form>
+                                <form method="POST" action="/goals/delete/<%= goal.id %>" style="display: inline;">
+                                    <button type="submit" class="delete-btn">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div>
+                            <strong>Target:</strong> <%= goal.targetValue %>
+                            <% if (goal.currentValue) { %>
+                                | <strong>Current:</strong> <%= goal.currentValue %>
+                            <% } %>
+                            <% if (goal.deadline) { %>
+                                | <strong>Deadline:</strong> <%= new Date(goal.deadline).toLocaleDateString() %>
+                            <% } %>
+                        </div>
+                        <% if (goal.description) { %>
+                            <div style="margin-top: 8px; color: #666;">
+                                <%= goal.description %>
+                            </div>
+                        <% } %>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <p style="text-align: center; color: #888; padding: 20px;">No goals set yet. Create your first goal above!</p>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

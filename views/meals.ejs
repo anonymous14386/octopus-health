@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: #f5f7fa; }
+        nav { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; }
+        nav .container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        nav h1 { font-size: 24px; }
+        nav .nav-links { display: flex; gap: 20px; flex-wrap: wrap; }
+        nav a { color: white; text-decoration: none; padding: 8px 16px; border-radius: 5px; }
+        nav a:hover { background: rgba(255,255,255,0.2); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: #333; margin-bottom: 20px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 5px; color: #555; font-weight: 500; }
+        input, select, textarea { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; }
+        button { padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        button:hover { transform: translateY(-2px); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .delete-btn { background: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .delete-btn:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <h1>🏥 Health Tracker</h1>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/weight">Weight</a>
+                <a href="/exercise">Exercise</a>
+                <a href="/meals">Meals</a>
+                <a href="/goals">Goals</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>🍽️ Log Meal</h2>
+            <form method="POST" action="/meals">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" name="date" value="<%= new Date().toISOString().split('T')[0] %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Time</label>
+                        <input type="time" name="time" value="<%= new Date().toTimeString().slice(0,5) %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Meal Type</label>
+                        <select name="mealType" required>
+                            <option value="breakfast">Breakfast</option>
+                            <option value="lunch">Lunch</option>
+                            <option value="dinner">Dinner</option>
+                            <option value="snack">Snack</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Calories (optional)</label>
+                        <input type="number" name="calories">
+                    </div>
+                    <div class="form-group">
+                        <label>Protein (g) (optional)</label>
+                        <input type="number" step="0.1" name="protein">
+                    </div>
+                    <div class="form-group">
+                        <label>Carbs (g) (optional)</label>
+                        <input type="number" step="0.1" name="carbs">
+                    </div>
+                    <div class="form-group">
+                        <label>Fats (g) (optional)</label>
+                        <input type="number" step="0.1" name="fats">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" rows="2" required placeholder="What did you eat?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea name="notes" rows="2"></textarea>
+                </div>
+                <button type="submit">Log Meal</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Meal History</h2>
+            <% if (meals.length > 0) { %>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Calories</th>
+                            <th>Macros (P/C/F)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% meals.forEach(meal => { %>
+                            <tr>
+                                <td><%= new Date(meal.date).toLocaleDateString() %></td>
+                                <td><%= meal.time %></td>
+                                <td><%= meal.mealType %></td>
+                                <td><%= meal.description.substring(0, 50) %><%= meal.description.length > 50 ? '...' : '' %></td>
+                                <td><%= meal.calories || '-' %></td>
+                                <td>
+                                    <% if (meal.protein || meal.carbs || meal.fats) { %>
+                                        <%= meal.protein || 0 %>/<%= meal.carbs || 0 %>/<%= meal.fats || 0 %>
+                                    <% } else { %>
+                                        -
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <form method="POST" action="/meals/delete/<%= meal.id %>" style="display: inline;">
+                                        <button type="submit" class="delete-btn">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            <% } else { %>
+                <p style="text-align: center; color: #888; padding: 20px;">No meals logged yet. Add your first one above!</p>
+            <% } %>
+        </div>
+    </div>
+</body>
+</html>

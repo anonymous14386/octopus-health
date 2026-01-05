@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  health-tracker:
+    build: .
+    container_name: octopus_health_tracker
+    restart: always
+    ports:
+      - "3002:3000"
+    volumes:
+      - health_data:/usr/src/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SESSION_SECRET=${SESSION_SECRET:-change-me-in-production}
+      - APP_PASSWORD=${APP_PASSWORD:-password}
+    networks:
+      - health_network
+
+networks:
+  health_network:
+    driver: bridge
+
+volumes:
+  health_data:
