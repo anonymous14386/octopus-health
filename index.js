@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
@@ -33,6 +34,10 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
+
+// Mount API routes (before session-based routes)
+const apiRouter = require('./api');
+app.use('/api', apiRouter);
 
 // Auth middleware
 const requireLogin = (req, res, next) => {
