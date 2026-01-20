@@ -37,6 +37,10 @@ app.use(session({
     }
 }));
 
+// Mount API routes (before session-based routes)
+const apiRouter = require('./api');
+app.use('/api', apiRouter);
+
 // Auth middleware
 const requireLogin = (req, res, next) => {
     if (req.session.user) {
