@@ -112,8 +112,7 @@
                     <label for="confirmPassword">Confirm Password</label>
                     <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
                 </div>
-                <input type="hidden" id="registerCaptchaToken" name="captchaToken">
-                <div class="g-recaptcha" data-sitekey="<%= siteKey %>" data-callback="onRegisterCaptcha"></div>
+                <!-- CAPTCHA removed from registration -->
                 <button type="submit">Register</button>
             </form>
             <div class="toggle-link">
@@ -129,8 +128,7 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <input type="hidden" id="loginCaptchaToken" name="captchaToken">
-                <div class="g-recaptcha" data-sitekey="<%= siteKey %>" data-callback="onLoginCaptcha"></div>
+                <!-- CAPTCHA removed -->
                 <button type="submit">Login</button>
             </form>
             <div class="toggle-link">
@@ -139,13 +137,5 @@
         <% } %>
     </div>
 </body>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<script>
-function onLoginCaptcha(token) {
-    document.getElementById('loginCaptchaToken').value = token;
-}
-function onRegisterCaptcha(token) {
-    document.getElementById('registerCaptchaToken').value = token;
-}
-</script>
+<!-- CAPTCHA removed -->
 </html>
