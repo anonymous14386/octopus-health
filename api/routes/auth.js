@@ -22,8 +22,14 @@ const failedLogins = {};
 const LOCKOUT_THRESHOLD = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
 
+
 const axios = require('axios');
 const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
+
+// Ensure generateToken is defined for API login
+const generateToken = (username) => {
+    return jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' });
+};
 
 router.post('/login', authLimiter, async (req, res) => {
     const { username, password } = req.body;

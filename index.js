@@ -8,6 +8,8 @@ const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
 const app = express();
+// Trust proxy for correct IP detection behind Cloudflare/NGINX
+app.set('trust proxy', 1);
 const port = process.env.PORT || 3000;
 const getDatabase = require('./database');
 const { User, authDb } = require('./database');
