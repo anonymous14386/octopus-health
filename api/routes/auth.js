@@ -26,37 +26,12 @@ const axios = require('axios');
 const RECAPTCHA_SECRET_KEY = process.env.RECAPTCHA_SECRET_KEY;
 
 router.post('/login', authLimiter, async (req, res) => {
-    const { username, password, captchaToken } = req.body;
+    const { username, password } = req.body;
     const now = Date.now();
-
-    // Always require CAPTCHA
-    if (!captchaToken) {
-        return res.status(403).json({ success: false, error: 'CAPTCHA required', captchaRequired: true });
-    }
-
-    // Verify captchaToken with Google reCAPTCHA API
-    try {
-        const verifyResponse = await axios.post(
-            'https://www.google.com/recaptcha/api/siteverify',
-            null,
-            {
-                params: {
-                    secret: RECAPTCHA_SECRET_KEY,
-                    response: captchaToken
-                }
-            }
-        );
-        if (!verifyResponse.data.success) {
-            return res.status(403).json({ success: false, error: 'CAPTCHA verification failed', captchaRequired: true });
-        }
-    } catch (err) {
-        console.error('CAPTCHA verification error:', err);
-        return res.status(500).json({ success: false, error: 'CAPTCHA verification error', captchaRequired: true });
-    }
 
     // Check lockout (optional, can keep for extra security)
     if (failedLogins[username] && failedLogins[username].lockedUntil > now) {
-        return res.status(429).json({ success: false, error: 'Account locked due to too many failed attempts. Please try again later.', captchaRequired: true });
+        return res.status(429).json({ success: false, error: 'Account locked due to too many failed attempts. Please try again later.' });
     }
 
     try {
