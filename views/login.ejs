@@ -99,7 +99,7 @@
         <% } %>
         
         <% if (mode === 'register') { %>
-            <form method="POST" action="/register">
+            <form method="POST" action="/register" id="registerForm">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" required>
@@ -112,13 +112,15 @@
                     <label for="confirmPassword">Confirm Password</label>
                     <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
                 </div>
+                <input type="hidden" id="registerCaptchaToken" name="captchaToken">
+                <div class="g-recaptcha" data-sitekey="<%= siteKey %>" data-callback="onRegisterCaptcha"></div>
                 <button type="submit">Register</button>
             </form>
             <div class="toggle-link">
                 Already have an account? <a href="/login">Login here</a>
             </div>
         <% } else { %>
-            <form method="POST" action="/login">
+            <form method="POST" action="/login" id="loginForm">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" required>
@@ -127,6 +129,8 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                 </div>
+                <input type="hidden" id="loginCaptchaToken" name="captchaToken">
+                <div class="g-recaptcha" data-sitekey="<%= siteKey %>" data-callback="onLoginCaptcha"></div>
                 <button type="submit">Login</button>
             </form>
             <div class="toggle-link">
@@ -135,4 +139,13 @@
         <% } %>
     </div>
 </body>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+function onLoginCaptcha(token) {
+    document.getElementById('loginCaptchaToken').value = token;
+}
+function onRegisterCaptcha(token) {
+    document.getElementById('registerCaptchaToken').value = token;
+}
+</script>
 </html>
