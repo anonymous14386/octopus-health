@@ -1,31 +1,8 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 
-// Shared auth database for all users
-const authDb = new Sequelize({
-    dialect: 'sqlite',
-    storage: path.join(__dirname, 'data', 'users.sqlite'),
-    logging: false
-});
-
-const User = authDb.define('User', {
-    username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false
-    }
-});
-
-// Initialize auth database (async - will be awaited in app startup)
-const initAuthDb = async () => {
-    await authDb.sync();
-};
-
-initAuthDb().catch(err => console.error('Error initializing auth database:', err));
+// User data is now handled by octopus-auth service
+// This file only handles health-specific data models
 
 const getDatabase = (username) => {
     const sequelize = new Sequelize({
@@ -164,5 +141,3 @@ const getDatabase = (username) => {
 };
 
 module.exports = getDatabase;
-module.exports.User = User;
-module.exports.authDb = authDb;
