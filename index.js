@@ -7,14 +7,15 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
+const axios = require('axios');
 const app = express();
 // Trust proxy for correct IP detection behind Cloudflare/NGINX
 app.set('trust proxy', 1);
 const port = process.env.PORT || 3000;
 const getDatabase = require('./database');
-const { User, authDb } = require('./database');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production-jwt-secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'octopus-shared-secret-change-in-production';
+const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL || 'https://auth.octopustechnology.net';
 
 // Ensure data directory exists
 const dataDir = path.join(__dirname, 'data');
@@ -88,25 +89,24 @@ app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     
     try {
-        const user = await User.findOne({ where: { username } });
-        
-        if (!user) {
-            return res.render('login', { title: 'Login', error: 'User not found', mode: 'login', siteKey: process.env.RECAPTCHA_SITE_KEY });
-        }
-        
-        const validPassword = await bcrypt.compare(password, user.password);
-        
-        if (validPassword) {
+        // Proxy to centralized auth service
+        const authResponse = await axios.post(`${AUTH_SERVICE_URL}/api/auth/login`, {
+            username,
+            password
+        });
+
+        if (authResponse.data.success) {
             req.session.user = { username };
             const { sequelize } = getDatabase(username);
             await sequelize.sync();
             res.redirect('/');
         } else {
-            res.render('login', { title: 'Login', error: 'Invalid password', mode: 'login', siteKey: process.env.RECAPTCHA_SITE_KEY });
+            res.render('login', { title: 'Login', error: authResponse.data.error || 'Login failed', mode: 'login', siteKey: process.env.RECAPTCHA_SITE_KEY });
         }
     } catch (error) {
-        console.error('Login error:', error);
-        res.render('login', { title: 'Login', error: 'Login failed', mode: 'login', siteKey: process.env.RECAPTCHA_SITE_KEY });
+        console.error('Login error:', error.response?.data || error.message);
+        const errorMsg = error.response?.data?.error || 'Login failed';
+        res.render('login', { title: 'Login', error: errorMsg, mode: 'login', siteKey: process.env.RECAPTCHA_SITE_KEY });
     }
 });
 
@@ -132,21 +132,24 @@ app.post('/register', async (req, res) => {
             return res.render('login', { title: 'Register', error: 'Password must be at least 6 characters', mode: 'register', siteKey: process.env.RECAPTCHA_SITE_KEY });
         }
         
-        const existingUser = await User.findOne({ where: { username } });
-        if (existingUser) {
-            return res.render('login', { title: 'Register', error: 'Username already exists', mode: 'register', siteKey: process.env.RECAPTCHA_SITE_KEY });
+        // Proxy registration to centralized auth service
+        const authResponse = await axios.post(`${AUTH_SERVICE_URL}/api/auth/register`, {
+            username,
+            password
+        });
+
+        if (authResponse.data.success) {
+            req.session.user = { username };
+            const { sequelize } = getDatabase(username);
+            await sequelize.sync();
+            res.redirect('/');
+        } else {
+            res.render('login', { title: 'Register', error: authResponse.data.error || 'Registration failed', mode: 'register', siteKey: process.env.RECAPTCHA_SITE_KEY });
         }
-        
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ username, password: hashedPassword });
-        
-        req.session.user = { username };
-        const { sequelize } = getDatabase(username);
-        await sequelize.sync();
-        res.redirect('/');
     } catch (error) {
-        console.error('Registration error:', error);
-        res.render('login', { title: 'Register', error: 'Registration failed', mode: 'register', siteKey: process.env.RECAPTCHA_SITE_KEY });
+        console.error('Registration error:', error.response?.data || error.message);
+        const errorMsg = error.response?.data?.error || 'Registration failed';
+        res.render('login', { title: 'Register', error: errorMsg, mode: 'register', siteKey: process.env.RECAPTCHA_SITE_KEY });
     }
 });
 
