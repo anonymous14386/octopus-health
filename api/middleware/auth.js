@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-jwt-secret-change-me';
+// Shared JWT secret across all Octopus services
+const JWT_SECRET = process.env.JWT_SECRET || 'octopus-shared-secret-change-in-production';
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
