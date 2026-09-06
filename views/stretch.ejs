@@ -5,8 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
-  <link rel="stylesheet" href="/theme.css">
-  <script src="/stick-figure.js" defer></script>
+  <link rel="stylesheet" href="<%= asset('/theme.css') %>">
+  <script src="<%= asset('/stick-figure.js') %>" defer></script>
   <style>
     .stretch-grid { display:grid; grid-template-columns: 1fr 360px; gap:20px; }
     @media (max-width: 980px) { .stretch-grid { grid-template-columns: 1fr; } }

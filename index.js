@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const { BUILD, STARTED_AT, asset } = require('./build');
 const { Op } = require('sequelize');
 const { AuthClient } = require('@octopus-security/auth-client');
 const axios = require('axios');
@@ -80,12 +81,35 @@ if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
 }
 
+// ── Liveness and deploy verification ─────────────────────────────────────────
+//
+// Both sit above every auth gate on purpose: "is this up" and "is the running
+// container the code I pushed" have to be answerable when a login is exactly
+// what is broken. There was no liveness route here at all — /api/health is a
+// different thing entirely, a router about the user's health data.
+// `unknown` is never `current`.
+app.get('/health', (_req, res) => res.json({ ok: true, service: 'octopus-health' }));
+app.get('/api/build', (_req, res) => res.json({
+    ok: true,
+    service: 'octopus-health',
+    build: BUILD,
+    startedAt: STARTED_AT,
+}));
+
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', './views');
+
+// Every render gets asset() without being passed it. Cloudflare caches CSS and
+// JS for four hours and overrides the origin, so an unversioned URL means a
+// shipped fix is invisible for that long and looks exactly like a failed
+// deploy. app.locals rather than a per-render local because the failure mode of
+// "remember to pass it" is one template quietly going stale — which is the bug,
+// not a smaller version of it.
+app.locals.asset = asset;
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
